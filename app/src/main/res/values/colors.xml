@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="azure_start">#1060b0</color>
+    <color name="azure_stop">#40b0d0</color>
+    <color name="yellow_start">#e8e035</color>
+    <color name="yellow_stop">#f8c418</color>
+    <color name="green_start">#14dd53</color>
+    <color name="green_stop">#64ed67</color>
+    <color name="purple">#c64384</color>
+    <color name="orange">#f05912</color>
+</resources>
