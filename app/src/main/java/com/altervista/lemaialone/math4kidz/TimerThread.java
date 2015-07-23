@@ -3,69 +3,91 @@ package com.altervista.lemaialone.math4kidz;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
-import android.widget.ProgressBar;
+
+import java.util.TreeSet;
 
 /**
  * Thread to manage the timeout bar during the game.
  * Created by Ilario Sanseverino on 22/07/15.
  */
 public class TimerThread extends Thread {
-
-	private final ProgressBar bar;
-	private final OnTimeout timeoutCallback;
-	private int speed;
 	private final Handler handler;
+	private TreeSet<TimeoutObject> timers;
 
-	public TimerThread(@NonNull ProgressBar bar, @NonNull OnTimeout timeoutCallback, int speed){
-		this.bar = bar;
-		this.timeoutCallback = timeoutCallback;
-		this.speed = speed;
+	public TimerThread(){
 		handler = new Handler(Looper.getMainLooper());
+		timers = new TreeSet<>();
 	}
 
 	@Override
 	public void run(){
-		bar.setMax(100 * 100);
-		final int progressMax = bar.getMax();
-		int progress = progressMax;
-		updateBar(progress);
-		long startTime = System.nanoTime();
-		long lastUpdate = startTime;
+		long lastTime = System.nanoTime();
+		while(true){
+			synchronized(this){
+				if(timers.isEmpty()){
+					try{
+						wait();
+						lastTime = System.nanoTime();
+					}
+					catch(InterruptedException e){ break; }
+				}
+			}
+			try{ sleep(timers.first().duration / 1000000); }
+			catch(InterruptedException e){ break; }
 
-		while(progress > 0){
-			try{
-				sleep(100);
-				int elapsed = (int)((lastUpdate - startTime) / 10000000); // centiseconds
-				lastUpdate = System.nanoTime();
-				progress = progressMax - (speed * elapsed);
-				updateBar(progress);
+			long elapsed = (System.nanoTime() - lastTime);
+			for(TimeoutObject to: timers){
+				to.duration -= elapsed;
+				if(to.duration < 0)
+					timeout(to.timeoutCallback);
 			}
-			catch(InterruptedException ex){
-				return;
+			synchronized(this){
+				while(!timers.isEmpty() && timers.first().duration <= 0)
+					timers.pollFirst();
 			}
+
+			lastTime += elapsed;
 		}
-		timeout();
+	}
+
+	public synchronized TimeoutObject addItem(long duration, OnTimeout callback){
+		TimeoutObject toAdd = new TimeoutObject(duration * 1000000, callback);
+		timers.add(toAdd);
+		notifyAll();
+		return toAdd;
+	}
+
+	public synchronized void cancelTimeout(TimeoutObject toRemove){
+		timers.remove(toRemove);
+	}
+
+	private void timeout(final OnTimeout callback){
+		handler.post(new Runnable() {
+			@Override
+			public void run(){
+				callback.onTimeout();
+			}
+		});
+	}
+
+	public static class TimeoutObject implements Comparable<TimeoutObject> {
+		private long duration;
+		private OnTimeout timeoutCallback;
+
+		private TimeoutObject(long duration, @NonNull OnTimeout callback){
+			this.duration = duration;
+			this.timeoutCallback = callback;
+		}
+
+		@Override
+		public int compareTo(@NonNull TimeoutObject timeoutObject){
+			if(duration < timeoutObject.duration)
+				return -1;
+			return duration > timeoutObject.duration? 1 : 0;
+		}
 	}
 
 	public interface OnTimeout {
 		void onTimeout();
-	}
-
-	private void updateBar(final int progress){
-		handler.post(new Runnable() {
-			@Override
-			public void run(){
-				bar.setProgress(progress);
-			}
-		});
-	}
-
-	private void timeout(){
-		handler.post(new Runnable() {
-			@Override
-			public void run(){
-				timeoutCallback.onTimeout();
-			}
-		});
 	}
 }

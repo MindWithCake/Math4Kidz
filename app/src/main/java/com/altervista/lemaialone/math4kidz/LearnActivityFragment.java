@@ -1,6 +1,7 @@
 package com.altervista.lemaialone.math4kidz;
 
 import android.app.Fragment;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,6 +29,7 @@ public class LearnActivityFragment<N extends Number>
 	private final static String ARG_OP = "LearnActivityFragment.ARG_OP";
 	private final static int NUM_BUTTONS = 12;
 
+	private View rootView;
 	private KeyboardView keyboardView;
 	private TextView expressionBox;
 	private ProgressBar timeBar;
@@ -40,6 +42,7 @@ public class LearnActivityFragment<N extends Number>
 	private ArrayList<N> buttons;
 
 	private TimerThread timerThread;
+	private TimerThread.TimeoutObject barTimeout;
 
 	public static <T extends Number> Fragment newInstance(Operation<T> op){
 		Fragment fragment = new LearnActivityFragment<T>();
@@ -66,21 +69,21 @@ public class LearnActivityFragment<N extends Number>
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedState){
-		View rootView = inflater.inflate(R.layout.fragment_learn, container, false);
+		rootView = inflater.inflate(R.layout.fragment_learn, container, false);
 
 		keyboardView = (KeyboardView)rootView.findViewById(R.id.keyboard);
 		expressionBox = (TextView)rootView.findViewById(R.id.question_box);
 		timeBar = (ProgressBar)rootView.findViewById(R.id.timer_bar);
 
 		keyboardView.setButtonListener(this);
-		initQuestion();
+		timeBar.setMax(100);
 
 		return rootView;
 	}
 
 	@Override
 	public void onButtonClicked(int buttonIndex){
-		timerThread.interrupt();
+		timerThread.cancelTimeout(barTimeout);
 		N answer = buttons.get(buttonIndex);
 		if(answer.equals(operation.apply(currentExpression)))
 			correctAnswer();
@@ -88,6 +91,22 @@ public class LearnActivityFragment<N extends Number>
 			wrongAnswer();
 
 		initQuestion();
+	}
+
+	@Override
+	public void onStart(){
+		super.onStart();
+
+		timerThread = new TimerThread();
+		timerThread.start();
+		initQuestion();
+	}
+
+	@Override
+	public void onStop(){
+		super.onStop();
+		timerThread.interrupt();
+		timerThread = null;
 	}
 
 	private void initQuestion(){
@@ -101,21 +120,35 @@ public class LearnActivityFragment<N extends Number>
 
 		expressionBox.setText(operation.toString(currentExpression));
 		keyboardView.setButtons(buttons.toArray());
-
-		timerThread = new TimerThread(timeBar, this, (int)Math.exp(level));
-		timerThread.start();
+		addProgressTimeout(timeBar.getMax());
 	}
 
 	private void correctAnswer(){
 		++consecutiveGuesses;
-		if(consecutiveGuesses % 5 == 0)
+		if(consecutiveGuesses % 5 == 0){
 			++level;
+			visualFeedback(R.drawable.level_rectangle);
+		}
+		else
+			visualFeedback(R.drawable.ok_rectangle);
 	}
 
 	private void wrongAnswer(){
+		visualFeedback(R.drawable.error_rectangle);
 		consecutiveGuesses = 0;
 		if(--lives < 0)
 			showResult();
+	}
+
+	private void visualFeedback(int resource){
+		final Drawable oldBackground = rootView.getBackground();
+		rootView.setBackgroundResource(resource);
+		timerThread.addItem(500, new TimerThread.OnTimeout() {
+			@Override
+			public void onTimeout(){
+				rootView.setBackground(oldBackground);
+			}
+		});
 	}
 
 	private void showResult(){
@@ -124,9 +157,20 @@ public class LearnActivityFragment<N extends Number>
 		getFragmentManager().popBackStack();
 	}
 
+	private void addProgressTimeout(int progress){
+		timeBar.setProgress(progress);
+		double nextUpdate = 100 * Math.pow(.9, level-1);
+		barTimeout = timerThread.addItem((long)nextUpdate, this);
+	}
+
 	@Override
 	public void onTimeout(){
-		wrongAnswer();
-		initQuestion();
+		if(timeBar.getProgress() <= 0){
+			wrongAnswer();
+			initQuestion();
+		}
+		else {
+			addProgressTimeout(timeBar.getProgress()-2);
+		}
 	}
 }

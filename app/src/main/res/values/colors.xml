@@ -8,4 +8,8 @@
     <color name="green_stop">#64ed67</color>
     <color name="purple">#c64384</color>
     <color name="orange">#f05912</color>
+    <color name="standard_background">#ffffff</color>
+    <color name="error_feed">#f53122</color>
+    <color name="ok_feed">#22f512</color>
+    <color name="level_feed">@color/azure_stop</color>
 </resources>
