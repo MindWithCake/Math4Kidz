@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">Math 4 Kidz</string>
-    <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="level_colon">Level:</string>
     <string name="level_hint">Current level</string>
@@ -10,12 +9,9 @@
     <string name="score_hint">Current score</string>
     <string name="time_colon">Time:</string>
     <string name="time_hint">Time elapsed</string>
-    <string name="plus_sign">+</string>
-    <string name="equal_sign">=</string>
-    <string name="question_sign">\?</string>
-    <string name="operation_sum">Addition</string>
-
-<!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="learn_question">What do you wish to learn today?</string>
+    <string name="operation_sum">Addition</string>
+    <string name="operation_diff">Subtraction</string>
+    <string name="operation_divide">Division</string>
+    <string name="operation_multiply">Multiplication</string>
 </resources>

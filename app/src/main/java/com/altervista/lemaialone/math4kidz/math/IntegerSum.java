@@ -1,6 +1,7 @@
 package com.altervista.lemaialone.math4kidz.math;
 
 import android.os.Parcel;
+import android.support.annotation.NonNull;
 
 import static com.altervista.lemaialone.math4kidz.LearnActivityFragment.RAND;
 
@@ -23,7 +24,7 @@ public class IntegerSum implements Operation<Integer> {
 	};
 
 	@Override
-	public Integer apply(Expression<Integer> expr){
+	public Integer apply(@NonNull Expression<Integer> expr){
 		int result = 0;
 		for(int i: expr.getOperands())
 			result += i;
@@ -31,12 +32,12 @@ public class IntegerSum implements Operation<Integer> {
 	}
 
 	@Override
-	public String toString(Expression<Integer> expr){
+	public String toString(@NonNull Expression<Integer> expr){
 		Integer[] operands = expr.getOperands();
-		String toReturn = new String(operands[0].toString());
+		String toReturn = operands[0].toString();
 		for(int i = 1; i < operands.length; ++i)
 			toReturn += " + "+operands[i];
-		return toReturn + " = ?";
+		return toReturn;
 	}
 
 	@Override

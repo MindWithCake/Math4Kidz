@@ -1,7 +1,7 @@
 package com.altervista.lemaialone.math4kidz.math;
 
-import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
 /**
  * Binary integer operation.
@@ -9,9 +9,9 @@ import android.os.Parcelable;
  */
 public interface Operation<T extends Number> extends Parcelable {
 
-	T apply(Expression<T> expr);
+	T apply(@NonNull Expression<T> expr);
 
-	String toString(Expression<T> expr);
+	String toString(@NonNull Expression<T> expr);
 
 	Expression<T> generate(int level);
 
@@ -20,14 +20,11 @@ public interface Operation<T extends Number> extends Parcelable {
 	class Expression<N extends Number>{
 		private N[] operands;
 
+		@SafeVarargs
 		public Expression(N... operands){this.operands = operands;}
 
 		public N[] getOperands(){
 			return operands;
-		}
-
-		public void setOperands(N... operands){
-			this.operands = operands;
 		}
 	}
 }
